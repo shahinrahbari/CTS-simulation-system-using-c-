@@ -1,0 +1,378 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.IO;
+using System.Xml;
+using System.Xml.Linq;
+
+namespace MASIM.classes
+{
+    public class xmlHandler
+    {
+        //System.IO.StreamWriter file;
+        List<string> lines;
+        string content;
+        public string path;
+        public xmlHandler(string _path = "")
+        {
+            path = _path;
+            lines = new List<string>();
+            lines.Add("<root>");
+            //file = new System.IO.StreamWriter(@"C:\Users\m.agah\Desktop\xml\xx.xml");
+        }
+
+        public void setCreatorContent(CreatorComponent c)
+        {
+
+            lines.Add("<Component>Creator");
+            lines.Add("<Name>" + c.name.ToString() + "</Name>") ;
+            lines.Add("<CreatingRate>" + c.createRate.ToString() + "</CreatingRate>" );
+            lines.Add("<NextItem>" + c.nextItem.ToString() + "</NextItem>");
+            lines.Add("<MaxTime>" + c.maxTime.ToString() + "</MaxTime>" );
+            lines.Add("<Param>" + c.param.ToString() + "</Param>" );
+            lines.Add("<Prob>" + c.prob.ToString() + "</Prob>");
+            lines.Add("</Component>");
+        }
+
+
+        public void setInventoryContent(InventoryComponent i)
+        {
+
+            lines.Add("<Component>Inventory");
+            lines.Add("<Name>" + i.name.ToString() + "</Name>");
+            lines.Add("<NextItem>" + i.nextItem.ToString() + "</NextItem>");
+            lines.Add("<InitialCost>" + i.initialCost.ToString() + "</InitialCost>");
+            lines.Add("<SellingCost>" + i.sellingCost.ToString() + "</SellingCost>");
+            lines.Add("<PLC>" + i.PLC.ToString() + "</PLC>");
+            lines.Add("<MaxLevel>" + i.maxLevel.ToString() + "</MaxLevel>");
+            lines.Add("</Component>");
+        }
+
+        public void setQueueContent(QueueComponent c)
+        {
+
+            lines.Add("<Component>Queue");
+            lines.Add("<Name>" + c.name.ToString() + "</Name>");
+            for (int i = 0; i < c.serverList.Count; i++)
+            {
+                lines.Add(String.Format("<Server Qname = '{0}'>", c.name.ToString() ) + c.serverList[i].name.ToString() + "</Server>");
+            }
+            lines.Add("</Component>");
+        }
+
+
+
+        public void setDecideContent(DecideComponent d)
+        {
+
+            lines.Add("<Component>Decide");
+            lines.Add("<Name>" + d.name.ToString() + "</Name>");
+            for (int i = 0; i < d.nextItems.Count; i++)
+            {
+                lines.Add(String.Format("<Decide name = '{0}'>",d.name) +d.nextItems[i].nextItem.ToString() + "," + d.nextItems[i].probability.ToString() + "</Decide>");
+            }
+            lines.Add("</Component>");
+        }
+
+        public void setEntityContent(EntityComponent e)
+        {
+            lines.Add("<Component>Entity");
+            lines.Add("<Name>" + e.name.ToString() + "</Name>");
+            lines.Add("<Method>" + e.distributionMethod.ToString() + "</Method>");
+            lines.Add("<Param>" + e.a.ToString() + "</Param>");
+            lines.Add("<MaxServiceTime>" + e.maxSrvTime.ToString() + "</MaxServiceTime>");
+            lines.Add("<CreatingProbability>" + e.creatingRate.ToString() + "</CreatingProbability>");
+            lines.Add("</Component>");
+        }
+
+        public void setServerContent(ServerComponent s)
+        {
+
+            lines.Add("<Component>Server");
+            lines.Add("<Name>" + s.name.ToString() + "</Name>");
+            lines.Add("<NextItem>" + s.nextItem.ToString() + "</NextItem>");
+            lines.Add("<Priority>" + s.priority.ToString() + "</Priority>");
+            lines.Add("</Component>");
+        }
+
+        public void setDisposerContent(DisposerComponent d)
+        {
+            
+            lines.Add("<Component>Disposer");
+            lines.Add("<Name>" + d.name.ToString() + "</Name>"); 
+            lines.Add("</Component>");
+        }
+        public List<CreatorComponent> getCreatorComponents()
+        {
+            
+            List<CreatorComponent> clist = new List<CreatorComponent>();
+            
+
+
+
+            XmlDocument xml = new XmlDocument();
+            xml.Load(path); // suppose that myXmlString contains "<Names>...</Names>"
+            XmlNamespaceManager ns = new XmlNamespaceManager(xml.NameTable);
+            ns.AddNamespace("hl7", "urn:hl7-org:v3");
+            XmlNodeList xnList = xml.SelectNodes("/root/Component", ns);
+
+            ConsoleApplication1.SIMSystem sys = new ConsoleApplication1.SIMSystem(0);
+            foreach (XmlNode xn in xnList)
+            {
+                if(xn.FirstChild.Value == "Creator")
+                {
+                CreatorComponent cc = new CreatorComponent(sys);
+                cc.name = xn["Name"].InnerText;
+                cc.createRate = Convert.ToDouble(xn["CreatingRate"].InnerText);
+                cc.nextItem = xn["NextItem"].InnerText;
+                cc.method = xn["MaxTime"].InnerText;
+                cc.param = Convert.ToInt32(xn["Param"].InnerText);
+                cc.prob = Convert.ToInt32(xn["Prob"].InnerText);
+                clist.Add(cc);
+                }
+            }
+            
+           
+            return clist;
+        }
+
+
+
+        public List<InventoryComponent> getInventoryComponents()
+        {
+
+            List<InventoryComponent> ilist = new List<InventoryComponent>();
+            XmlDocument xml = new XmlDocument();
+            xml.Load(path); // suppose that myXmlString contains "<Names>...</Names>"
+            XmlNamespaceManager ns = new XmlNamespaceManager(xml.NameTable);
+            ns.AddNamespace("hl7", "urn:hl7-org:v3");
+            XmlNodeList xnList = xml.SelectNodes("/root/Component", ns);
+
+            ConsoleApplication1.SIMSystem sys = new ConsoleApplication1.SIMSystem(0);
+            foreach (XmlNode xn in xnList)
+            {
+                if (xn.FirstChild.Value == "Inventory")
+                {
+                    InventoryComponent ic = new InventoryComponent();
+                    ic.name = xn["Name"].InnerText;
+                    ic.initialCost = Convert.ToInt32(xn["InitialCost"].InnerText);
+                    ic.sellingCost = Convert.ToInt32(xn["SellingCost"].InnerText);
+                    ic.nextItem = xn["NextItem"].InnerText;
+                    ic.PLC = Convert.ToInt32(xn["PLC"].InnerText);
+                    ic.maxLevel = Convert.ToInt32(xn["MaxLevel"].InnerText);
+                    ilist.Add(ic);
+                }
+            }
+
+
+            return ilist;
+        }
+
+
+        public List<DecideComponent> getDecideComponents()
+        {
+            
+            List<DecideComponent> dlist = new List<DecideComponent>();
+            List<List<nextItemProbs>> allNextItems = new List<List<nextItemProbs>>();
+            List<string> decideNames = new List<string>();
+            XmlDocument xml = new XmlDocument();
+            xml.Load(path); // suppose that myXmlString contains "<Names>...</Names>"
+            XmlNamespaceManager ns = new XmlNamespaceManager(xml.NameTable);
+            ns.AddNamespace("hl7", "urn:hl7-org:v3");
+            XmlNodeList xnList = xml.SelectNodes("/root/Component", ns);
+            ConsoleApplication1.SIMSystem sys = new ConsoleApplication1.SIMSystem(0);
+            foreach (XmlNode xn in xnList)
+            {
+                if (xn.FirstChild.Value == "Decide")
+                {
+                    decideNames.Add(xn["Name"].InnerText);
+
+                }
+            }
+
+
+
+            for (int i = 0; i < decideNames.Count; i++)
+            {
+                List<nextItemProbs> nextItemsForThisDecide = new List<nextItemProbs>();
+                string dnames = decideNames[i];
+                string t = String.Format("/root/Component/Decide[@name =  '{0}']", dnames);
+                xnList = xml.SelectNodes(t);
+                foreach (XmlNode xn in xnList)
+                {
+                    string nextItem = xn.FirstChild.InnerText;
+                    // parse nextItem for get its probability and name
+                    nextItemProbs x = new nextItemProbs();
+                    x.nextItem = nextItem.Split(',')[0];
+                    x.probability = Convert.ToInt32(nextItem.Split(',')[1]);
+                    nextItemsForThisDecide.Add(x);
+                }
+                DecideComponent dc = new DecideComponent();
+                dc.name = decideNames[i];
+                dc.nextItems = nextItemsForThisDecide;
+                dlist.Add(dc);
+            }
+            return dlist;
+
+        }
+
+        public List<QueueComponent> getQueuesComponents(List<ServerComponent> allServerComponents)
+        {
+            List<ConsoleApplication1.Server> temp = new List<ConsoleApplication1.Server>();
+            List<string> QueuesNames = new List<string>();
+            List<QueueComponent> qlist = new List<QueueComponent>();
+
+
+
+
+            List<ServerComponent> allServers = new List<ServerComponent>();
+            allServers = getServerComponents();
+            XmlDocument xml = new XmlDocument();
+            xml.Load(path); // suppose that myXmlString contains "<Names>...</Names>"
+            XmlNamespaceManager ns = new XmlNamespaceManager(xml.NameTable);
+            ns.AddNamespace("hl7", "urn:hl7-org:v3");
+            XmlNodeList xnList = xml.SelectNodes("/root/Component", ns);
+            ConsoleApplication1.SIMSystem sys = new ConsoleApplication1.SIMSystem(0);
+            foreach (XmlNode xn in xnList)
+            {
+                if (xn.FirstChild.Value == "Queue")
+                {
+                    QueuesNames.Add(xn["Name"].InnerText);
+                    
+                }
+            }
+            for (int i = 0; i < QueuesNames.Count; i++)
+			{
+                List<ServerComponent> nextServers = new List<ServerComponent>();
+                string Qname = QueuesNames[i];
+                string t = String.Format("/root/Component/Server[@Qname =  '{0}']" ,Qname );
+                xnList = xml.SelectNodes(t);                
+                foreach (XmlNode xn in xnList)
+                {
+                    string servername = xn.FirstChild.InnerText;
+                    
+                    foreach (ServerComponent server in allServers)
+                    {
+                        if (server.name == servername)
+                        {
+                            nextServers.Add(server);
+                        }
+                    }
+                }
+                List<ConsoleApplication1.Server> xs = new List<ConsoleApplication1.Server>();
+                for (int j = 0; j < nextServers.Count; j++)
+                {
+                    ConsoleApplication1.Server sss = new ConsoleApplication1.Server("null", sys, "null", 0);
+                    xs.Add(sss);
+                }
+                QueueComponent qq = new QueueComponent(xs, sys);
+                qq.name = Qname;
+                
+                // fill combo box with server names
+                for (int j = 0; j < nextServers.Count; j++)
+                {
+                    qq.listBox1.Items.Add(nextServers[j].name);
+                }
+                qlist.Add(qq);
+			}
+            return qlist;
+        }
+
+
+
+
+
+        public List<ServerComponent> getServerComponents()
+        {
+            List<ServerComponent> slist = new List<ServerComponent>();
+            XmlDocument xml = new XmlDocument();
+            xml.Load(path); // suppose that myXmlString contains "<Names>...</Names>"
+            XmlNamespaceManager ns = new XmlNamespaceManager(xml.NameTable);
+            ns.AddNamespace("hl7", "urn:hl7-org:v3");
+            XmlNodeList xnList = xml.SelectNodes("/root/Component", ns);
+
+            ConsoleApplication1.SIMSystem sys = new ConsoleApplication1.SIMSystem(0);
+            foreach (XmlNode xn in xnList)
+            {
+                if (xn.FirstChild.Value == "Server")
+                {
+                    ServerComponent cc = new ServerComponent(sys);
+                    cc.name = xn["Name"].InnerText;
+                    cc.nextItem = xn["NextItem"].InnerText;
+                    cc.priority = Convert.ToInt32(xn["Priority"].InnerText);
+                    slist.Add(cc);
+                }
+            }
+            return slist;
+        }
+
+        public List<EntityComponent> getEntityComponents()
+        {
+            List<EntityComponent> elist = new List<EntityComponent>();
+            XmlDocument xml = new XmlDocument();
+            xml.Load(path); // suppose that myXmlString contains "<Names>...</Names>"
+            XmlNamespaceManager ns = new XmlNamespaceManager(xml.NameTable);
+            ns.AddNamespace("hl7", "urn:hl7-org:v3");
+            XmlNodeList xnList = xml.SelectNodes("/root/Component", ns);
+
+            ConsoleApplication1.SIMSystem sys = new ConsoleApplication1.SIMSystem(0);
+            foreach (XmlNode xn in xnList)
+            {
+                if (xn.FirstChild.Value == "Entity")
+                {
+                    EntityComponent ee = new EntityComponent(sys);
+                    ee.name = xn["Name"].InnerText;
+                    ee.distributionMethod = xn["Method"].InnerText;
+                    ee.a = Convert.ToDouble(xn["Param"].InnerText);
+                    ee.maxSrvTime = Convert.ToInt32(xn["MaxServiceTime"].InnerText);
+                    ee.creatingRate = Convert.ToInt32(xn["CreatingProbability"].InnerText);
+                    
+                    elist.Add(ee);
+                }
+            }
+            return elist;
+        }
+
+
+        public List<DisposerComponent> getDisposerComponents()
+        {
+            List<DisposerComponent> dlist = new List<DisposerComponent>();
+            XmlDocument xml = new XmlDocument();
+            xml.Load(path); // suppose that myXmlString contains "<Names>...</Names>"
+            XmlNamespaceManager ns = new XmlNamespaceManager(xml.NameTable);
+            ns.AddNamespace("hl7", "urn:hl7-org:v3");
+            XmlNodeList xnList = xml.SelectNodes("/root/Component", ns);
+
+            ConsoleApplication1.SIMSystem sys = new ConsoleApplication1.SIMSystem(0);
+            foreach (XmlNode xn in xnList)
+            {
+                if (xn.FirstChild.Value == "Disposer")
+                {
+                    DisposerComponent dd = new DisposerComponent(sys);
+                    dd.name = xn["Name"].InnerText;
+                    dlist.Add(dd);
+                }
+            }
+            return dlist;
+        }
+
+
+        public List<string>  getXML()
+        {
+            //System.IO.StreamWriter file = new System.IO.StreamWriter(@"C:\Users\m.agah\Desktop\xml\xx.xml");
+            lines.Add("</root>");
+            //for (int i = 0; i < lines.Count; i++)
+            //{
+            //    file.Write(lines[i]);
+            //}
+            //file.Close();
+            //return file;
+            return lines;
+        }
+
+        //public // get object of creator componet
+
+    }
+}
